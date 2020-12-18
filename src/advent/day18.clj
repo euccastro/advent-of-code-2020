@@ -31,14 +31,13 @@
 
 (defn eval [s]
   (loop [s s]
-    (let [lpe (leaf-paren-expr s)]
-      (if lpe
-        (recur (str/replace
-                s
-                lpe
-                (str (eval-simple-expression
-                      (subs lpe 1 (dec (.length lpe)))))))
-        (eval-simple-expression s)))))
+    (if-let [lpe (leaf-paren-expr s)]
+      (recur (str/replace
+              s
+              lpe
+              (str (eval-simple-expression
+                    (subs lpe 1 (dec (.length lpe)))))))
+      (eval-simple-expression s))))
 
 (time (apply + (map eval (str/split-lines real-input))))
 ;; => 5019432542701
