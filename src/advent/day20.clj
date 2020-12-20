@@ -173,10 +173,14 @@
                   monster-kernel)]
        [scan-x scan-y]))))
 
+(defn remove-borders [lines]
+  (let [end (dec (count (first lines)))]
+    (-> (mapv #(subs % 1 end) lines)
+        (subvec 1 end))))
+
 (defn solution2 [input]
   (let [tid->lines (tile-id->tile-lines input)
         width (long (Math/sqrt (count tid->lines)))
-        tile-width (count (first (vals tid->lines)))
         tid->borders (tile-id->borders tid->lines)
         border->tids (border->tile-ids tid->borders)
         uniq-borders (unique-borders border->tids)
@@ -219,12 +223,11 @@
                       (apply
                        concat
                        (for [row (range width)]
-                         (apply map str
-                                (for [col (range width)]
-                                  (subvec
-                                   (mapv #(subs % 1 (dec tile-width))
-                                         (:lines (placed [col row])))
-                                   1 (dec tile-width)))))))
+                         (apply
+                          map
+                          str
+                          (for [col (range width)]
+                            (remove-borders (:lines (placed [col row]))))))))
         map-dash-count (count (filter #{\#} (str/join stitched-map)))
         matches (some scan (variations stitched-map))]
     (- map-dash-count (* (count matches) monster-dash-count))))
