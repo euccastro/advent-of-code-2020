@@ -179,6 +179,17 @@
         (subvec 1 end))))
 
 (defn solution2 [input]
+  ;; Pick any corner, transform it to become the top left corner, then add all
+  ;; other tiles one line at a time.
+  ;;
+  ;; We can do this in one pass because borders are unique, so once we place any
+  ;; tile the identity of its neighbors is completely determined.
+  ;;
+  ;; To find the right transformation of each tile, we take advantage of the
+  ;; fact that we have already placed its top neighbor and/or its left neighbor.
+  ;; If we're missing a neighbor (e.g., in the first row, or in the first column
+  ;; of subsequent rows) we just use the tile's unique border to match against,
+  ;; trying both orientations.
   (let [tid->lines (tile-id->tile-lines input)
         width (long (Math/sqrt (count tid->lines)))
         tid->borders (tile-id->borders tid->lines)
