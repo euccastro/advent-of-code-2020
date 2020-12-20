@@ -1,19 +1,15 @@
 (ns advent.day20
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [miracle.save :as ms]))
+            [clojure.string :as str]))
 
 (def demo-input (slurp (io/resource "demo20")))
 (def real-input (slurp (io/resource "input20")))
 
-
 (defn tiles [input]
   (str/split input #"\R\R"))
 
-
 (defn tile-number [s]
   (Long. (re-find #"\d+" s)))
-
 
 (defn tile-id->tile-lines [input]
   (->> (tiles input)
@@ -98,11 +94,6 @@
                (when (= n unique-border-count)
                  tile)))))
 
-(defn side-tiles
-  "takes the result of unique-border-frequencies"
-  [m]
-  (tiles-with-n-unique-borders m 1))
-
 (defn corner-tiles
   "takes the result of unique-border-frequencies"
   [m]
@@ -154,13 +145,11 @@
               %)
         (variations lines)))
 
-(def monster "                  #
+(def monster-lines (str/split-lines "                  #
 #    ##    ##    ###
- #  #  #  #  #  #   ")
+ #  #  #  #  #  #   "))
 
-(def monster-variations (variations (str/split-lines monster)))
-
-(defn monster-kernel [monster-lines]
+(def monster-kernel
   {:monster-width (count (first monster-lines))
    :monster-height (count monster-lines)
    :monster-coords
@@ -169,11 +158,9 @@
          :when (= char \#)]
      [x y])})
 
-(def monster-kernels (map monster-kernel monster-variations))
+(def monster-dash-count (count (:monster-coords monster-kernel)))
 
-(def monster-dash-count (count (:monster-coords (first monster-kernels))))
-
-(defn swipe [map-lines {:keys [monster-width monster-height monster-coords]}]
+(defn scan [map-lines {:keys [monster-width monster-height monster-coords]}]
   (let [map-width (count (first map-lines))
         map-height (count map-lines)]
     (seq
@@ -185,17 +172,6 @@
                   monster-coords)]
        [scan-x scan-y]))))
 
-(comment
-
-  (swipe [".####"
-          "#...#"
-          "###.#"]
-         {:monster-width 2
-          :monster-height 2
-          :monster-coords [[0 0] [1 1]]})
-
-  )
-
 (defn solution2 [input]
   (let [tid->lines (tile-id->tile-lines input)
         width (long (Math/sqrt (count tid->lines)))
@@ -205,8 +181,7 @@
         uniq-borders (unique-borders border->tids)
         tid->unique-borders (tile-id->unique-borders tid->borders uniq-borders)
         uniq-freqs (unique-border-frequencies uniq-borders)
-        sides (side-tiles uniq-freqs)
-        placed (let [tid (second (corner-tiles uniq-freqs))
+        placed (let [tid (first (corner-tiles uniq-freqs))
                      [left top] (tid->unique-borders tid)
                      lines (tid->lines tid)
                      arr-lines (or (arrange-tile lines left top)
@@ -235,10 +210,10 @@
                                   (arrange-tile (tid->lines tid) left top)))})))]
       (let [placed (reduce place-tile
                            placed
-                           (for [row (range width)
-                                 col (range width)
-                                 :when (not= row col 0)]
-                             [col row]))
+                           (rest  ; we've already placed [0 0]
+                            (for [row (range width)
+                                  col (range width)]
+                              [col row])))
             stitched-map (vec
                           (apply
                            concat
@@ -251,180 +226,8 @@
                                        1 (dec tile-width)))))))
             map-dash-count (count (filter #{\#} (str/join stitched-map)))
             matches
-            (some #(swipe stitched-map %) monster-kernels)]
-        (ms/save :a)
+            (some #(scan % monster-kernel) (variations stitched-map))]
         (- map-dash-count (* (count matches) monster-dash-count))))))
 
-
-(comment
-
-  width
-  tile-width
-  (* 12 8)
-  (count (tiles demo-input))
-  (count (first (str/split-lines (tiles (demo-input)))))
-  (count (tiles real-input))
-  (Math/sqrt *1)
-  (map #(count (swipe stitched-map %)) monster-kernels)
-  map-dash-count
-  (count (filter #{\#} (str/join stitched-map)))
-
-  (def demo-stitched (vec (str/split-lines ".#.#..#.##...#.##..#####
-###....#.#....#..#......
-##.##.###.#.#..######...
-###.#####...#.#####.#..#
-##.#....#.##.####...#.##
-...########.#....#####.#
-....#..#...##..#.#.###..
-.####...#..#.....#......
-#..#.##..#..###.#.##....
-#.####..#.####.#.#.###..
-###.#.#...#.######.#..##
-#.####....##..########.#
-##..##.#...#...#.#.#.#..
-...#..#..#.#.##..###.###
-.#.#....#.##.#...###.##.
-###.#...#..#.##.######..
-.#.#.###.##.##.#..#.##..
-.####.###.#...###.#..#.#
-..#.#..#..#.#.#.####.###
-#..####...#.#.#.###.###.
-#####..#####...###....##
-#.##..#..#...#..####...#
-.#.###..##..##..####.##.
-...###...##...#...#..###")))
-  (def kernel (monster-kernel (str/split-lines monster)))
-  (count (:monster-coords kernel))
-  (count (filter #{\#} (str/join demo-stitched)))
-  (- 303 30)
-  (swipe )
-  (solution2 real-input)
-;; => 2686
-  (ms/ld :a)
-
-  (count stitched-map)
-  (count (first stitched-map))
-  stitched-map
-  (count matches)
-  (first monster-kernels)
-  (some #(swipe % kernel) (variations demo-stitched))
-  (= (nth (variations stitched-map) 6) demo-stitched)
-
-  (some identity (map #(swipe % kernel) (variations stitched-map)))
-  (some #(swipe % kernel) (variations stitched-map))
-  (swipe (nth (variations stitched-map) 6) kernel)
-
-  (count (variations stitched-map))
-
-
-  (= "")
-  (count stitched-map)
-  (count (first stitched-map))
-  (first stitched-map)
-  (apply map str
-       (for [col (range width)]
-         (:lines (placed [col 0]))))
-  (for [row (range width)]
-    (for [col (range width)]
-      (:lines (placed [col row]))))
-  stitched-map
-
-  placed
-
-  (count placements)
-
-  top-left
-
-  (def next-id (first ))
-
-  (arrange-tile (tid->lines next-id) (right-border (:lines top-left)) (reverse-line (first (tid->unique-borders next-id))))
-
-
-
-  (-> placed
-      (place-tile 1 0)
-      (place-tile 2 0))
-
-  ()
-  (border->tids (normalize-border (left-border (:lines top-left))))
-  ()
-
-  (map str ["abc" "def" "hij"] ["123" "456" "789"])
-  (fliph ["abc" "def" "hij"])
-  (flipv ["abc" "def" "hij"])
-  (transpose ["abc" "def" "hij"])
-  (variations ["abc" "def" "hij"])
-  (corner-tiles uniq-freqs)
-  (def top-left (first (corner-tiles uniq-freqs)))
-
-  (def ub (tid->unique-borders top-left))
-  ub
-  (def top (first ub))
-
-  (def left (second ub))
-  (arrange-tile (tid->lines top-left) (reverse-line top) left)
-
-  border->tids
-  (tid->unique-borders )
-  (defn variations [lines]
-    )
-
-
-  (apply arrange-tile (tid->lines top-left) (reverse (tid->unique-borders top-left)))
-
-  (arrange-tile )
-  width
-  top-left
-  (tid->unique-borders tid)
-  (def tid top-left)
-  sides
-
-  (sides)
-
-
-  (defn arrange-tile
-
-    [tid [x y] placed]
-    )
-  (->> demo-input
-       tile-id->tile-lines
-       tile-id->borders
-       border->tile-ids
-       tile-id->unique-borders
-       corners)
-  (border->tile-ids
-   (tile-id->borders
-    (tile-id->tile-lines demo-input)))
-  (->> demo-input
-       border->tiles
-       (map (fn [[_ [[_ x]]]] x))
-       frequencies
-       (keep (fn [[tile unique-border-count]]
-               (when (= 2 unique-border-count)
-                 tile)))
-       (apply *))
-
-  (-> demo-input
-      tile-id->tile-lines
-      count)
-  (count (tiles real-input))
-
-  (unique-border-frequencies demo-input)
-
-  (sides demo-input)
-  (corners demo-input)
-  (borders ["abc" "def" "ghi"])
-  (normalize-border "cyabc")
-  (tile-number (first (tiles demo-input)))
-  (borders (rest (str/split-lines (first (tiles demo-input)))))
-
-
-
-  (keep (fn [[tile unique-border-count]]
-          (when (= 2 unique-border-count)
-            tile))
-        (frequencies
-         (map (fn [[_ [[_ x]]]] x)
-              (filter #(= 1 (count (second %)))
-                      (border->tiles demo-input)))))
-  )
+(time (solution2 real-input))
+;; => 2476
