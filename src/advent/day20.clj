@@ -149,18 +149,19 @@
 #    ##    ##    ###
  #  #  #  #  #  #   "))
 
+(def monster-width (count (first monster-lines)))
+
+(def monster-height (count monster-lines))
+
 (def monster-kernel
-  {:monster-width (count (first monster-lines))
-   :monster-height (count monster-lines)
-   :monster-coords
-   (for [[y line] (map-indexed vector monster-lines)
-         [x char] (map-indexed vector line)
-         :when (= char \#)]
-     [x y])})
+  (for [[y line] (map-indexed vector monster-lines)
+        [x char] (map-indexed vector line)
+        :when (= char \#)]
+    [x y]))
 
-(def monster-dash-count (count (:monster-coords monster-kernel)))
+(def monster-dash-count (count monster-kernel))
 
-(defn scan [map-lines {:keys [monster-width monster-height monster-coords]}]
+(defn scan [map-lines]
   (let [map-width (count (first map-lines))
         map-height (count map-lines)]
     (seq
@@ -169,7 +170,7 @@
            :when (every?
                   (fn [[x y]]
                     (= (get-in map-lines [(+ scan-y y) (+ scan-x x)]) \#))
-                  monster-coords)]
+                  monster-kernel)]
        [scan-x scan-y]))))
 
 (defn solution2 [input]
@@ -225,7 +226,7 @@
                                          (:lines (placed [col row])))
                                    1 (dec tile-width)))))))
         map-dash-count (count (filter #{\#} (str/join stitched-map)))
-        matches (some #(scan % monster-kernel) (variations stitched-map))]
+        matches (some scan (variations stitched-map))]
     (- map-dash-count (* (count matches) monster-dash-count))))
 
 (time (solution2 real-input))
