@@ -39,7 +39,7 @@ aaaabbb")
     (= [java.lang.String] (map type pat)) (first pat)
     (every? number? pat) (apply str (map resolved pat))
     :else (let [[a [_ & b]] (split-with (complement #{'|}) pat)]
-            (str "("
+            (str "(?:"
                  (solve resolved a)
                  "|"
                  (solve resolved b)
