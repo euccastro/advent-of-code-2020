@@ -1,5 +1,6 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/math.combinatorics {:mvn/version "0.1.6"}}
+ :deps {org.clojure/math.combinatorics {:mvn/version "0.1.6"}
+        miracle-save/miracle-save {:mvn/version "0.0.1"}}
  :aliases {:reveal {:extra-deps {vlaaad/reveal {:mvn/version "1.2.180"}}
                     :ns-default vlaaad.reveal
                     :exec-fn repl}}}
