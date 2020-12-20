@@ -188,46 +188,45 @@
                                    (arrange-tile lines left (reverse-line top))
                                    (arrange-tile lines (reverse-line left) top)
                                    (arrange-tile lines (reverse-line left) (reverse-line top)))]
-                 {[0 0] {:tid tid :lines arr-lines}})]
-    (letfn [(place-tile [placed [x y]]
-              (let [[neighbor border-fn]
-                    (if (zero? x)
-                      [(placed [x (dec y)]) bottom-border]
-                      [(placed [(dec x) y]) right-border])
-                    [tid] (remove #{(:tid neighbor)}
-                                  (border->tids (normalize-border (border-fn (:lines neighbor)))))
-                    unique-border-variations (mapcat (juxt identity reverse-line) (tid->unique-borders tid))]
-                (assoc placed [x y]
-                       {:tid tid
-                        :lines (some
-                                identity
-                                (for [left (if-let [{:keys [lines]} (placed [(dec x) y])]
-                                             [(right-border lines)]
-                                             unique-border-variations)
-                                      top (if-let [{:keys [lines]} (placed [x (dec y)])]
-                                            [(bottom-border lines)]
-                                            unique-border-variations)]
-                                  (arrange-tile (tid->lines tid) left top)))})))]
-      (let [placed (reduce place-tile
-                           placed
-                           (rest  ; we've already placed [0 0]
-                            (for [row (range width)
-                                  col (range width)]
-                              [col row])))
-            stitched-map (vec
-                          (apply
-                           concat
-                           (for [row (range width)]
-                             (apply map str
-                                    (for [col (range width)]
-                                      (subvec
-                                       (mapv #(subs % 1 (dec tile-width))
-                                             (:lines (placed [col row])))
-                                       1 (dec tile-width)))))))
-            map-dash-count (count (filter #{\#} (str/join stitched-map)))
-            matches
-            (some #(scan % monster-kernel) (variations stitched-map))]
-        (- map-dash-count (* (count matches) monster-dash-count))))))
+                 {[0 0] {:tid tid :lines arr-lines}})
+        place-tile (fn place-tile [placed [x y]]
+                     (let [[neighbor border-fn]
+                           (if (zero? x)
+                             [(placed [x (dec y)]) bottom-border]
+                             [(placed [(dec x) y]) right-border])
+                           [tid] (remove #{(:tid neighbor)}
+                                         (border->tids (normalize-border (border-fn (:lines neighbor)))))
+                           unique-border-variations (mapcat (juxt identity reverse-line) (tid->unique-borders tid))]
+                       (assoc placed [x y]
+                              {:tid tid
+                               :lines (some
+                                       identity
+                                       (for [left (if-let [{:keys [lines]} (placed [(dec x) y])]
+                                                    [(right-border lines)]
+                                                    unique-border-variations)
+                                             top (if-let [{:keys [lines]} (placed [x (dec y)])]
+                                                   [(bottom-border lines)]
+                                                   unique-border-variations)]
+                                         (arrange-tile (tid->lines tid) left top)))})))
+        placed (reduce place-tile
+                       placed
+                       (rest  ; we've already placed [0 0]
+                        (for [row (range width)
+                              col (range width)]
+                          [col row])))
+        stitched-map (vec
+                      (apply
+                       concat
+                       (for [row (range width)]
+                         (apply map str
+                                (for [col (range width)]
+                                  (subvec
+                                   (mapv #(subs % 1 (dec tile-width))
+                                         (:lines (placed [col row])))
+                                   1 (dec tile-width)))))))
+        map-dash-count (count (filter #{\#} (str/join stitched-map)))
+        matches (some #(scan % monster-kernel) (variations stitched-map))]
+    (- map-dash-count (* (count matches) monster-dash-count))))
 
 (time (solution2 real-input))
 ;; => 2476
