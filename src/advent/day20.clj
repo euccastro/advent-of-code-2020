@@ -75,11 +75,10 @@
 (defn corner-tiles
   "takes the result of tile-id->unique-borders"
   [m]
-  (->> m
-       (map-vals count)
-       (keep (fn [[tile unique-border-count]]
-               (when (= 2 unique-border-count)
-                 tile)))))
+  (keep (fn [[tile unique-borders]]
+          (when (= 2 (count unique-borders))
+            tile))
+        m))
 
 (defn solution1 [input]
   (->> input
