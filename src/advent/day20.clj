@@ -194,18 +194,19 @@
                   [(placed [(dec x) y]) right-border])
                 [tid] (remove #{(:tid neighbor)}
                               (border->tids (normalize-border (border-fn (:lines neighbor)))))
+                lines (tid->lines tid)
                 unique-border-variations (mapcat (juxt identity reverse-line) (tid->unique-borders tid))]
             (assoc placed [x y]
                    {:tid tid
                     :lines (some
-                            identity
+                            #(apply arrange-tile lines %)
                             (for [left (if-let [{:keys [lines]} (placed [(dec x) y])]
                                          [(right-border lines)]
                                          unique-border-variations)
                                   top (if-let [{:keys [lines]} (placed [x (dec y)])]
                                         [(bottom-border lines)]
                                         unique-border-variations)]
-                              (arrange-tile (tid->lines tid) left top)))})))
+                              [left top]))})))
         placed
         (reduce place-tile
                 {[0 0] top-left-corner-tile}
