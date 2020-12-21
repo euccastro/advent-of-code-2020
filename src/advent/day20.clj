@@ -5,24 +5,27 @@
 (def demo-input (slurp (io/resource "demo20")))
 (def real-input (slurp (io/resource "input20")))
 
-(defn tiles [input]
-  (str/split input #"\R\R"))
-
-(defn tile-number [s]
-  (Long. (re-find #"\d+" s)))
+(defn map-vals [f m]
+  (into {}
+        (map (fn [[k v]] [k (f v)])
+             m)))
 
 (defn tile-id->tile-lines [input]
-  (->> (tiles input)
+  (->> (str/split input #"\R\R")
        (map str/split-lines)
        (map (fn [[l & ls]]
-              [(tile-number l)
+              [(Long. (re-find #"\d+" l))
                (vec ls)]))
        (into {})))
 
 (defn reverse-line [l]
   (apply str (reverse l)))
 
-(defn normalize-border [line]
+(defn normalize-border
+  "Borders are unique even considering reversal. This function picks one
+  canonical representation for a border so we can more easily match possibly
+  flipped borders across tiles."
+  [line]
   (->> line
        ((juxt identity reverse-line))
        sort
@@ -49,10 +52,7 @@
 (defn tile-id->borders
   "takes the result of tile-id->tile-lines"
   [m]
-  (into {}
-        (map (fn [[tile-id tile-lines]]
-               [tile-id (borders tile-lines)])
-             m)))
+  (map-vals borders m))
 
 (defn border->tile-ids
   "takes the result of tile-id->borders"
@@ -60,52 +60,32 @@
   (->> (for [[tid bs] m
              b bs]
          [b tid])
-       (group-by first)
-       (map (fn [[b matches]]
-              [b (map second matches)]))
-       (into {})))
-
-(defn unique-borders
-  "takes the result of border->tile-ids"
-  [m]
-  (filter #(= 1 (count (second %)))
-          m))
+       (group-by first)                    ; => {b [[b tid] ...]}
+       (map-vals (partial map second))))   ; => {b [tid ...]}
 
 (defn tile-id->unique-borders
-  "takes the result of tile-id->borders and unique-borders"
-  [tid->borders unique-borders]
-  (let [s (set (map first unique-borders))]
-    (into {}
-          (map (fn [[k v]] [k (filter s v)])
-               tid->borders))))
+  "takes the result of tile-id->borders"
+  [tile-id->borders]
+  (let [unshared-borders
+        (set (for [[border tiles] (border->tile-ids tile-id->borders)
+                   :when (= 1 (count tiles))]
+               border))]
+    (map-vals (partial filter unshared-borders) tile-id->borders)))
 
-(defn unique-border-frequencies
+(defn corner-tiles
   "takes the result of tile-id->unique-borders"
   [m]
   (->> m
-       (map (comp first second))
-       frequencies))
-
-(defn tiles-with-n-unique-borders
-  "takes the result of unique-border-frequencies and a number of sides"
-  [m n]
-  (->> m
+       (map-vals count)
        (keep (fn [[tile unique-border-count]]
-               (when (= n unique-border-count)
+               (when (= 2 unique-border-count)
                  tile)))))
-
-(defn corner-tiles
-  "takes the result of unique-border-frequencies"
-  [m]
-  (tiles-with-n-unique-borders m 2))
 
 (defn solution1 [input]
   (->> input
        tile-id->tile-lines
        tile-id->borders
-       border->tile-ids
-       unique-borders
-       unique-border-frequencies
+       tile-id->unique-borders
        corner-tiles
        (apply *)))
 
@@ -194,10 +174,8 @@
         width (long (Math/sqrt (count tid->lines)))
         tid->borders (tile-id->borders tid->lines)
         border->tids (border->tile-ids tid->borders)
-        uniq-borders (unique-borders border->tids)
-        tid->unique-borders (tile-id->unique-borders tid->borders uniq-borders)
-        uniq-freqs (unique-border-frequencies uniq-borders)
-        placed (let [tid (first (corner-tiles uniq-freqs))
+        tid->unique-borders (tile-id->unique-borders tid->borders)
+        placed (let [tid (first (corner-tiles tid->unique-borders))
                      [left top] (tid->unique-borders tid)
                      lines (tid->lines tid)
                      arr-lines (or (arrange-tile lines left top)
