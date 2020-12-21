@@ -22,14 +22,6 @@ sqjhc mxmxvkd sbzzf (contains fish)")
         (map (fn [[k v]] [k (f v)])
              m)))
 
-(defn collect-vals [pairs]
-  (reduce
-   (fn [m [k v]]
-     (assoc m k (conj (get m k #{})
-                      v)))
-   {}
-   pairs))
-
 (defn parse-input [input]
   (mapv parse-ingredient-line (str/split-lines input)))
 
@@ -60,3 +52,38 @@ sqjhc mxmxvkd sbzzf (contains fish)")
 
 (solution1 real-input)
 ;; => 2170
+
+;;; part 2
+
+(defn solution2 [input]
+  (let [i+a (parse-input input)
+        all-as (reduce set/union (map second i+a))]
+    (loop [resolved {}
+           a->possible-is
+           (into {}
+                 (map (fn [a]
+                        [a
+                         (reduce set/intersection
+                                 (keep
+                                  (fn [[is as]]
+                                    (when (as a) is))
+                                  i+a))])
+                      all-as))]
+      (if (= (count resolved) (count all-as))
+        (str/join "," (map resolved (sort (keys resolved))))
+        (let [[resolved-a resolved-i]
+              (some (fn [[a [i & rest]]]
+                      (when (empty? rest)
+                        [a i]))
+                    a->possible-is)]
+          (recur
+           (assoc resolved resolved-a resolved-i)
+           (-> a->possible-is
+               (dissoc resolved-a)
+               (->> (map-vals #(disj % resolved-i))))))))))
+
+(solution2 demo-input)
+;; => "mxmxvkd,sqjhc,fvjkl"
+
+(solution2 real-input)
+;; => "nfnfk,nbgklf,clvr,fttbhdr,qjxxpr,hdsm,sjhds,xchzh"
