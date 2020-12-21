@@ -105,7 +105,8 @@
   (vec (apply (partial map str) lines)))
 
 (def variations
-  ;; XXX: we could obviously avoid repeating some ops here
+  ;; We could obviously avoid repeating some ops here, but this turns out not to
+  ;; be a performance problem in practice.
   (juxt
    identity
    fliph
