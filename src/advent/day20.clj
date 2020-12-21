@@ -176,48 +176,56 @@
         tid->borders (tile-id->borders tid->lines)
         border->tids (border->tile-ids tid->borders)
         tid->unique-borders (tile-id->unique-borders tid->borders)
-        placed (let [tid (first (corner-tiles tid->unique-borders))
-                     [left top] (tid->unique-borders tid)
-                     lines (tid->lines tid)
-                     arr-lines (or (arrange-tile lines left top)
-                                   (arrange-tile lines left (reverse-line top))
-                                   (arrange-tile lines (reverse-line left) top)
-                                   (arrange-tile lines (reverse-line left) (reverse-line top)))]
-                 {[0 0] {:tid tid :lines arr-lines}})
-        place-tile (fn place-tile [placed [x y]]
-                     (let [[neighbor border-fn]
-                           (if (zero? x)
-                             [(placed [x (dec y)]) bottom-border]
-                             [(placed [(dec x) y]) right-border])
-                           [tid] (remove #{(:tid neighbor)}
-                                         (border->tids (normalize-border (border-fn (:lines neighbor)))))
-                           unique-border-variations (mapcat (juxt identity reverse-line) (tid->unique-borders tid))]
-                       (assoc placed [x y]
-                              {:tid tid
-                               :lines (some
-                                       identity
-                                       (for [left (if-let [{:keys [lines]} (placed [(dec x) y])]
-                                                    [(right-border lines)]
-                                                    unique-border-variations)
-                                             top (if-let [{:keys [lines]} (placed [x (dec y)])]
-                                                   [(bottom-border lines)]
-                                                   unique-border-variations)]
-                                         (arrange-tile (tid->lines tid) left top)))})))
-        placed (reduce place-tile
-                       placed
-                       (rest  ; we've already placed [0 0]
-                        (for [row (range width)
-                              col (range width)]
-                          [col row])))
-        stitched-map (vec
-                      (apply
-                       concat
-                       (for [row (range width)]
-                         (apply
-                          map
-                          str
-                          (for [col (range width)]
-                            (remove-borders (:lines (placed [col row]))))))))
+
+        top-left-corner-tile
+        (let [tid (first (corner-tiles tid->unique-borders))
+              [left top] (tid->unique-borders tid)
+              lines (tid->lines tid)
+              arr-lines (or (arrange-tile lines left top)
+                            (arrange-tile lines left (reverse-line top))
+                            (arrange-tile lines (reverse-line left) top)
+                            (arrange-tile lines (reverse-line left) (reverse-line top)))]
+          {:tid tid :lines arr-lines})
+
+        place-tile
+        (fn place-tile [placed [x y]]
+          (let [[neighbor border-fn]
+                (if (zero? x)
+                  [(placed [x (dec y)]) bottom-border]
+                  [(placed [(dec x) y]) right-border])
+                [tid] (remove #{(:tid neighbor)}
+                              (border->tids (normalize-border (border-fn (:lines neighbor)))))
+                unique-border-variations (mapcat (juxt identity reverse-line) (tid->unique-borders tid))]
+            (assoc placed [x y]
+                   {:tid tid
+                    :lines (some
+                            identity
+                            (for [left (if-let [{:keys [lines]} (placed [(dec x) y])]
+                                         [(right-border lines)]
+                                         unique-border-variations)
+                                  top (if-let [{:keys [lines]} (placed [x (dec y)])]
+                                        [(bottom-border lines)]
+                                        unique-border-variations)]
+                              (arrange-tile (tid->lines tid) left top)))})))
+        placed
+        (reduce place-tile
+                {[0 0] top-left-corner-tile}
+                (rest  ; we've already placed [0 0]
+                 (for [row (range width)
+                       col (range width)]
+                   [col row])))
+
+        stitched-map
+        (vec
+         (apply
+          concat
+          (for [row (range width)]
+            (apply
+             map
+             str
+             (for [col (range width)]
+               (remove-borders (:lines (placed [col row]))))))))
+
         map-dash-count (count (filter #{\#} (str/join stitched-map)))
         matches (some scan (variations stitched-map))]
     (- map-dash-count (* (count matches) monster-dash-count))))
