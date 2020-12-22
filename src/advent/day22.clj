@@ -1,18 +1,8 @@
 (ns advent.day22
   (:require [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import [clojure.lang PersistentQueue]))
+            [clojure.string :as str]))
 
 (def input (slurp (io/resource "input22")))
-
-(def input "Player 1:
-43
-19
-
-Player 2:
-2
-29
-14")
 
 (defn parse-long [x]
   (Long/parseLong x))
@@ -24,13 +14,16 @@ Player 2:
                    rest                 ; skip player number
                    (map parse-long)))))
 
-(defn nonrecursive-turn [[[a & as] [b & bs]]]
-  (assert (not= a b))
-  (if (< a b)
-    [as (concat bs (list b a))]
-    [(concat as (list a b)) bs]))
+(defn transfer-cards [[[a & as] [b & bs]] a-wins?]
+  (if a-wins?
+    [(concat as (list a b)) bs]
+    [as (concat bs (list b a))]))
 
-(defn play-nonrecursive-combat [decks]
+(defn nonrecursive-turn [[[a] [b] :as decks]]
+  (assert (not= a b))
+  (transfer-cards decks (> a b)))
+
+(defn play-nonrecursive-game [decks]
   (->> decks
        (iterate nonrecursive-turn)
        (drop-while (partial every? seq))
@@ -45,7 +38,7 @@ Player 2:
 (defn solution1 [input]
   (->> input
        initial-decks
-       play-nonrecursive-combat
+       play-nonrecursive-game
        (filter seq)
        first
        score))
@@ -53,16 +46,42 @@ Player 2:
 (solution1 input)
 ;; => 33680
 
-(defn recursive-turn [seen
-                      [[a & as :as a-deck]
-                       [b & bs :as b-deck]
-                       :as decks]]
-  (cond
-    (seen decks)
-    [:a a-deck]
+(declare play-recursive-game)
 
-    (every? #(>= (first %) (count (rest %))) decks)
-    ()
-    (recursive-turn seen as bs)
-    )
-  )
+(defn recursive-turn [[[a & as]
+                       [b & bs] :as decks]]
+  (transfer-cards
+   decks
+   (if (every? #(<= (first %) (count (rest %))) decks)
+     (= 0 (:winner (play-recursive-game [(take a as) (take b bs)])))
+     (> a b))))
+
+(def play-recursive-game
+  (memoize
+   (fn [decks]
+     (loop [seen #{}
+            decks decks]
+       (cond
+         (seen decks) {:winner 0
+                       :deck (first decks)}
+         (some empty? decks) (first
+                              (keep-indexed
+                               (fn [i deck]
+                                 (when (seq deck)
+                                   {:winner i
+                                    :deck deck}))
+                               decks))
+         :else (recur (conj seen decks)
+                      (recursive-turn decks)))))))
+
+(defn solution2 [input]
+  (-> input
+      initial-decks
+      play-recursive-game
+      :deck
+      score))
+
+(def decks (initial-decks input))
+
+(solution2 input)
+;; => 33683
