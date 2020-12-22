@@ -52,27 +52,22 @@
                        [b & bs] :as decks]]
   (transfer-cards
    decks
-   (if (every? #(<= (first %) (count (rest %))) decks)
+   (if (and (<= a (count as)) (<= b (count bs)))
      (= 0 (:winner (play-recursive-game [(take a as) (take b bs)])))
      (> a b))))
 
-(def play-recursive-game
-  (memoize
-   (fn [decks]
-     (loop [seen #{}
-            decks decks]
-       (cond
-         (seen decks) {:winner 0
-                       :deck (first decks)}
-         (some empty? decks) (first
-                              (keep-indexed
-                               (fn [i deck]
-                                 (when (seq deck)
-                                   {:winner i
-                                    :deck deck}))
-                               decks))
-         :else (recur (conj seen decks)
-                      (recursive-turn decks)))))))
+(defn play-recursive-game [decks]
+  (loop [seen #{}
+         [a-deck b-deck :as decks] decks]
+    (cond
+      (seen decks) {:winner 0
+                    :deck (first decks)}
+      (empty? a-deck) {:winner 1
+                       :deck b-deck}
+      (empty? b-deck) {:winner 0
+                       :deck a-deck}
+      :else (recur (conj seen decks)
+                   (recursive-turn decks)))))
 
 (defn solution2 [input]
   (-> input
@@ -81,7 +76,5 @@
       :deck
       score))
 
-(def decks (initial-decks input))
-
-(solution2 input)
+(time (solution2 input))
 ;; => 33683
