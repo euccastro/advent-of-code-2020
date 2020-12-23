@@ -1,5 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/math.combinatorics {:mvn/version "0.1.6"}
+        com.google.guava/guava {:mvn/version "30.1-jre"}
+        com.taoensso/tufte {:mvn/version "2.2.0"}
         miracle-save/miracle-save {:mvn/version "0.0.1"}}
  :aliases {:reveal {:extra-deps {vlaaad/reveal {:mvn/version "1.2.180"}}
                     :ns-default vlaaad.reveal
