@@ -46,10 +46,13 @@
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
 
-(defn pick-dest [n picks]
+(defn pick-dest [n p1 p2 p3]
   (cond
-    (= n 0) (recur circle-size picks)
-    (some #{n} picks) (recur (dec n) picks)
+    (= n 0) (recur circle-size p1 p2 p3)
+    (or (= n p1)
+        (= n p2)
+        (= n p3))
+    (recur (dec n) p1 p2 p3)
     :else n))
 
 (defn step2 [^ints a]
@@ -63,14 +66,16 @@
   ;; so the new `current` for the next step will again be at the start. This
   ;; reduces the number of special cases we need to handle.
   (let [current (aget a 0)
-        picks [(aget a 1) (aget a 2) (aget a 3)]
-        dest (pick-dest (dec current) picks)
+        p1 (aget a 1)
+        p2 (aget a 2)
+        p3 (aget a 3)
+        dest (pick-dest (dec current) p1 p2 p3)
         dest-idx (Ints/indexOf a dest)
         cs (long circle-size)]
     (System/arraycopy a 4 a 0 (- dest-idx 3))
-    (aset-int a (- dest-idx 3) (nth picks 0))
-    (aset-int a (- dest-idx 2) (nth picks 1))
-    (aset-int a (- dest-idx 1) (nth picks 2))
+    (aset-int a (- dest-idx 3) p1)
+    (aset-int a (- dest-idx 2) p2)
+    (aset-int a (- dest-idx 1) p3)
     (System/arraycopy a (inc dest-idx) a dest-idx (- cs dest-idx 1))
     (aset a (long (dec cs)) current)))
 
@@ -83,6 +88,9 @@
    (* (aget array (inc i1))
       (aget array (inc (inc i1))))))
 ;; => 44541319250
+
+
+
 
 (comment
   (let [arr (int-array circle-size (initial-circle2 demo-input))]
