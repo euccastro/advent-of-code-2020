@@ -64,19 +64,15 @@
   ;; reduces the number of special cases we need to handle.
   (let [current (aget a 0)
         picks [(aget a 1) (aget a 2) (aget a 3)]
-        dest (p ::pick-dest (pick-dest (dec current) picks))
-        dest-idx (p ::find-dest-idx (Ints/indexOf a dest))
+        dest (pick-dest (dec current) picks)
+        dest-idx (Ints/indexOf a dest)
         cs (long circle-size)]
-    (p ::copy1  (System/arraycopy a 4 a 0 (- dest-idx 3)))
-    (p ::copy2
-       (do
-         (aset-int a (- dest-idx 3) (nth picks 0))
-         (aset-int a (- dest-idx 2) (nth picks 1))
-         (aset-int a (- dest-idx 1) (nth picks 2))))
-    (p ::copy3
-       (System/arraycopy a (inc dest-idx) a dest-idx (- cs dest-idx 1)))
-    (p ::copy4
-       (aset a (long (dec cs)) current))))
+    (System/arraycopy a 4 a 0 (- dest-idx 3))
+    (aset-int a (- dest-idx 3) (nth picks 0))
+    (aset-int a (- dest-idx 2) (nth picks 1))
+    (aset-int a (- dest-idx 1) (nth picks 2))
+    (System/arraycopy a (inc dest-idx) a dest-idx (- cs dest-idx 1))
+    (aset a (long (dec cs)) current)))
 
 ;; takes 33 minutes :P
 (time
