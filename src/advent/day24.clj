@@ -25,6 +25,7 @@ wseweeenwnesenwwwswnew")
 
 (def real-input (slurp (io/resource "input24")))
 
+;; the trick is to project the hex grid into a more familiar rectangular one.
 (def directions
   {\e [1 0]
    \n [1 1]
@@ -87,5 +88,6 @@ wseweeenwnesenwwwswnew")
 (time (solution2 demo-input))
 ;; => 2208
 
+;; runs in 2secs
 (time (solution2 real-input))
 ;; => 4214
