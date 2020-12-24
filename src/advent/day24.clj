@@ -87,6 +87,6 @@ wseweeenwnesenwwwswnew")
 (time (solution2 demo-input))
 ;; => 2208
 
-;; runs in 2secs
+;; runs in 2.4secs
 (time (solution2 real-input))
 ;; => 4214
