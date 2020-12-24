@@ -106,7 +106,10 @@
     a))
 
 (defn step2-ll [^ints a]
-  (let [[current p1 p2 p3] (take 4 (rest (iterate #(aget a %) 0)))
+  (let [current (aget a 0)
+        p1 (aget a current)
+        p2 (aget a p1)
+        p3 (aget a p2)
         dest (pick-dest (dec current) p1 p2 p3)
         p3-val (aget a p3)
         dest-val (aget a dest)]
@@ -128,6 +131,7 @@
 
   ;; runs in ~10sec
   (time (solution2-ll real-input))
+;; => 44541319250
 ;; => 44541319250
 
   )
