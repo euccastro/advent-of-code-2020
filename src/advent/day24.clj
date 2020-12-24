@@ -29,26 +29,24 @@ wseweeenwnesenwwwswnew")
 ;;
 ;; https://www.redblobgames.com/grids/hexagons/#coordinates-axial
 (def directions
-  {\e [1 0]
-   \n [1 1]
-   \N [0 1]
-   \w [-1 0]
-   \S [-1 -1]
-   \s [0 -1]})
+  {"e" [1 0]
+   "ne" [1 1]
+   "nw" [0 1]
+   "w" [-1 0]
+   "sw" [-1 -1]
+   "se" [0 -1]})
+
+(def dir-regex (re-pattern (str/join "|" (keys directions))))
 
 (defn line-destination [line]
-  (-> line
-      (str/replace "nw" "N")
-      (str/replace "ne" "n")
-      (str/replace "sw" "S")
-      (str/replace "se" "s")
-      (->>
+  (->> line
+       (re-seq dir-regex)
        (map directions)
-       (reduce (partial map +)))))
+       (reduce (partial map +))))
 
 (defn place-tiles [input]
   (->> input
-       (str/split-lines)
+       str/split-lines
        (map line-destination)
        (reduce (fn [blacks pos]
                  ((if (blacks pos) disj conj)
