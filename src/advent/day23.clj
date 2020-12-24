@@ -34,7 +34,7 @@
 (solution1 real-input)
 ;; => "25368479"
 
-;;; part 2
+;;; part 2; faster (but still slow) array-based approach
 
 (def circle-size 1000000)
 
@@ -91,7 +91,7 @@
 ;; => 44541319250
 
 
-;;; part 2, linked-list based alternative
+;;; part 2, fast linked-list based alternative
 ;;;
 ;;; state is represented as an array where the first element is the current
 ;;; cup, and the element at index i contains the next cup from i in the circle.
@@ -129,9 +129,8 @@
 
 (comment
 
-  ;; runs in ~10sec
+  ;; runs in ~2.8sec
   (time (solution2-ll real-input))
-;; => 44541319250
 ;; => 44541319250
 
   )
