@@ -129,7 +129,7 @@
 
 (comment
 
-  ;; runs in ~10sec
+  ;; runs in ~2.8sec
   (time (solution2-ll real-input))
 ;; => 44541319250
 ;; => 44541319250
