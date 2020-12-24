@@ -44,15 +44,14 @@ wseweeenwnesenwwwswnew")
        (map directions)
        (reduce (partial map +))))
 
+(defn set-toggle [s x]
+  ((if (s x) disj conj) s x))
+
 (defn place-tiles [input]
   (->> input
        str/split-lines
        (map line-destination)
-       (reduce (fn [blacks pos]
-                 ((if (blacks pos) disj conj)
-                  blacks
-                  pos))
-               #{})))
+       (reduce set-toggle #{})))
 
 (defn solution1 [input]
   (count (place-tiles input)))
