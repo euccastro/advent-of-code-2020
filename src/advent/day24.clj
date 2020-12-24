@@ -26,6 +26,8 @@ wseweeenwnesenwwwswnew")
 (def real-input (slurp (io/resource "input24")))
 
 ;; the trick is to project the hex grid into a more familiar rectangular one.
+;;
+;; https://www.redblobgames.com/grids/hexagons/#coordinates-axial
 (def directions
   {\e [1 0]
    \n [1 1]
