@@ -31,11 +31,32 @@
 
 (def numbers (reverse (map read-string (re-seq #"\d+" input))))
 
-(some
- (fn [[n & window]]
-   (when (not-any?
-          #(= n (apply + %))
-          (combo/combinations window 2))
-     n))
- (partition (inc preamble-len) 1 numbers))
+(def invalid-number
+  (some
+   (fn [[n & window]]
+     (when (not-any?
+            #(= n (apply + %))
+            (combo/combinations window 2))
+       n))
+   (partition (inc preamble-len) 1 numbers)))
+
+invalid-number
 ;; => 14360655
+
+(some
+ (fn [nums]
+   (some
+    (fn [[slice sum]]
+      (when (and (<= 2 (count slice))
+                 (= sum invalid-number))
+        (+ (apply min slice)
+           (apply max slice))))
+    (reductions (fn [[v acc] n]
+                  (let [new-acc (+ acc n)]
+                    (if (> new-acc invalid-number)
+                      (reduced nil)
+                      [(conj v n) new-acc])))
+                [[] 0]
+                nums)))
+ (iterate rest numbers))
+;; => 1962331
