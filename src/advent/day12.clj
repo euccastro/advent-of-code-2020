@@ -43,19 +43,49 @@ F11")
         ")"
         "(\\d+)")))
 
-(->> input
-     (re-seq move-pat)
-     (map (fn [[_ k v]]
-            [k (read-string v)]))
+(def parsed-input
+  (->> input
+       (re-seq move-pat)
+       (map (fn [[_ k v]]
+              [k (read-string v)]))))
+
+(defn manhattan-dist [state]
+  (->> state
+       :pos
+       vals
+       (map #(Math/abs %))
+       (apply +)))
+
+(->> parsed-input
      (reduce
       (fn [state [op arg]]
         ((moves op) state arg))
       {:pos {:x 0 :y 0} :dir {:x 1 :y 0}})
-     :pos
-     vals
-     (map #(Math/abs %))
-     (apply +))
+     manhattan-dist)
+
 ;; => 364
 
 
-;;; part two
+;;; part 2
+
+(def moves2
+  {"N" (fn N [state n] (update-in state [:wp :y] #(+ % n)))
+   "S" (fn S [state n] (update-in state [:wp :y] #(- % n)))
+   "E" (fn E [state n] (update-in state [:wp :x] #(+ % n)))
+   "W" (fn W [state n] (update-in state [:wp :x] #(- % n)))
+   "L" (fn W [state n] (nth
+                        (iterate #(update % :wp rot90) state)
+                        (quot (mod n 360) 90)))
+   "R" (fn W [state n] (nth
+                        (iterate #(update % :wp rot90) state)
+                        (quot (mod (- n) 360) 90)))
+   "F" (fn F [{:keys [wp] :as state} n]
+         (update state :pos #(add-vec (mul-vec wp n) %)))})
+
+(->> parsed-input
+     (reduce
+      (fn [state [op arg]]
+        ((moves2 op) state arg))
+      {:pos {:x 0 :y 0} :wp {:x 10 :y 1}})
+     manhattan-dist)
+;; => 39518
