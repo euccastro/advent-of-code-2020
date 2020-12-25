@@ -30,8 +30,45 @@ iyr:2011 ecl:brn hgt:59in")
 
 (def passports (map parse-passport (str/split input #"\R\R")))
 
-(defn valid? [passport]
+(defn valid1? [passport]
   (= required-fields (set/intersection required-fields (set (keys passport)))))
 
-(count (filter valid? passports))
+(count (filter valid1? passports))
 ;; => 254
+
+;;; part 2
+
+(defn four-digits [s]
+  (re-matches #"\d{4}" s))
+
+(def rules
+  {"byr" (fn byr [s]
+           (and (four-digits s)
+                (<= 1920 (read-string s) 2002)))
+   "iyr" (fn byr [s]
+           (and (four-digits s)
+                (<= 2010 (read-string s) 2020)))
+   "eyr" (fn eyr [s]
+           (and (four-digits s)
+                (<= 2020 (read-string s) 2030)))
+   "hgt" (fn hgt [s]
+           (let [[_ n units] (re-matches #"^(\d+)(cm|in)$" s)]
+             (case units
+               "cm" (<= 150 (read-string n) 193)
+               "in" (<= 59 (read-string n) 76)
+               false)))
+   "hcl" (fn hcl [s]
+           (re-matches #"^#[0-9a-f]{6}" s))
+   "ecl" #{"amb" "blu" "brn" "gry" "grn" "hzl" "oth"}
+   "pid" (fn pid [s]
+           (re-matches #"\d{9}" s))})
+
+(defn valid2? [passport]
+  (and (valid1? passport)
+       (->> passport
+            (merge-with #(%1 %2) rules)
+            vals
+            (every? identity))))
+
+(count (filter valid2? passports))
+;; => 184
