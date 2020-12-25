@@ -1,5 +1,6 @@
 (ns advent.day10
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (def demo-input-1 "16
 10
@@ -49,15 +50,39 @@
 
 (def input real-input)
 
-(->> input
-     (re-seq #"\d+")
-     (map read-string)
-     ((juxt identity (constantly 0) #(+ 3 (apply max %))))
-     (apply conj)
-     sort
-     (partition 2 1)
-     (map (fn [[a b]] (- b a)))
+(def differences
+  (->> input
+       (re-seq #"\d+")
+       (map read-string)
+       ((juxt identity (constantly 0) #(+ 3 (apply max %))))
+       (apply conj)
+       sort
+       (partition 2 1)
+       (map (fn [[a b]] (- b a)))))
+
+(->> differences
      frequencies
      vals
      (apply *))
 ;; => 1700
+
+;;; part two
+
+(def one-diff-run-arrangements
+  (memoize
+   (fn [num-ones]
+     (case num-ones
+       (0 1) 1
+       2 2
+       3 4
+       (- (* (one-diff-run-arrangements (- num-ones 1))
+             2)
+        1)))))
+
+(->> differences
+     (apply str)
+     (#(str/split % #"3"))
+     (map count)
+     (map one-diff-run-arrangements)
+     (apply *))
+;; => 12401793332096
