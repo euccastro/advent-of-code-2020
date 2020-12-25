@@ -1,6 +1,5 @@
 (ns advent.day8
-  (:require [miracle.save :as ms]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
 (def demo-input "nop +0
@@ -15,7 +14,7 @@ acc +6")
 
 (def real-input (slurp (io/resource "input8")))
 
-(def input demo-input)
+(def input real-input)
 
 (def ops
   {"acc"
@@ -51,9 +50,18 @@ acc +6")
 
 ;;; part 2
 
-(def generate-programs [program]
-  )
-(comment
+(defn patched-programs [program]
+  (keep-indexed
+   (fn [lineno [op]]
+     (case op
+       "jmp" (assoc-in program [lineno 0] "nop")
+       "nop" (assoc-in program [lineno 0] "jmp")
+       nil))
+   program))
 
-  (ms/ld :a)
-  )
+(some
+ (fn [program]
+   (let [[retcode a] (run program)]
+     (when (= retcode :halt) a)))
+ (patched-programs program))
+;; => 2304
