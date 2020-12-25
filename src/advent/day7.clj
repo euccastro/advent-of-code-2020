@@ -1,7 +1,8 @@
 (ns advent.day7
   (:require [clojure.string :as str]
             [clojure.set :as set]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [advent.util :as util]))
 
 (def demo-input "light red bags contain 1 bright white bag, 2 muted yellow bags.
 dark orange bags contain 3 bright white bags, 4 muted yellow bags.
@@ -47,20 +48,13 @@ dark violet bags contain no other bags.")
    collect-by-first))
 
 
-(defn fixed-point [f start]
-  (->> start
-       (iterate f)
-       (partition 2 1)
-       (some (fn [[prev this]]
-               (when (= prev this) this)))))
-
 (defn expand-transitive-containers [set]
   (apply set/union
          set
          (map contained-in set)))
 
 (defn transitive-containers [x]
-  (fixed-point
+  (util/fixed-point
    expand-transitive-containers
    (contained-in x)))
 
