@@ -30,7 +30,5 @@
 (crack 17807724)
 ;; => 11
 
-(let [[pk1 _] input
-      [_ ls2] (map crack input)]
-  (transform pk1 ls2))
+(transform (second input) (crack (first input)))
 ;; => 1478097
