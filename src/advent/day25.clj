@@ -30,5 +30,20 @@
 (crack 17807724)
 ;; => 11
 
-(transform (second input) (crack (first input)))
+;; 2437 msecs
+(time
+ (transform (first input) (crack (second input))))
+
+;; 1751 msecs
+(time
+ (transform (second input) (crack (first input))))
+
+;; 2980 msecs
+(time (do (crack (first input)) (crack (second input))))
+
+;; 3450 msecs
+(time
+ (do
+   (crack (second input))
+   (transform (second input) (crack (first input)))))
 ;; => 1478097
