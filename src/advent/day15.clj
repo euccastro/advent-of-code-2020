@@ -14,7 +14,7 @@
 (def state
   {:turn (count input-numbers)
    :spoken (last input-numbers)
-   :seen (->> (butlast input-numbers)         ; exclude last-spoken
+   :seen (->> (butlast input-numbers)
               (map vector (rest (range)))
               (mapv (comp vec reverse))
               (into {}))})
