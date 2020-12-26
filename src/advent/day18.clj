@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]))
 
+;;; Look ma, no instaparse!
+
 (def demo-simple-input "1 + 2 * 3 + 4 * 5 + 6")
 
 (def demo-nested-input "1 + (2 * 3) + (4 * (5 + 6))")

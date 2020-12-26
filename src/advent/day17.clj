@@ -96,9 +96,10 @@
 
 
 (defn cell-neighbors [cell]
-  (remove #{cell}
-          (apply combo/cartesian-product
-                 (for [coord cell] [(dec coord) coord (inc coord)]))))
+  (->> cell
+       (map (juxt dec identity inc))
+       (apply combo/cartesian-product)
+       (remove #{cell})))
 
 (comment
 
