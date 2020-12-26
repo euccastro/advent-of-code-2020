@@ -1,7 +1,8 @@
 (ns advent.day14
   (:require [clojure.string :as str]
             [clojure.pprint :refer [cl-format]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.math.combinatorics :as combo]))
 
 (def demo-input "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
 mem[8] = 11
@@ -15,14 +16,14 @@ mem[26] = 1")
 
 (def real-input (slurp (io/resource "input14")))
 
-(def input demo-input-2)
+(def input real-input)
 
 (defn decimal-str->binary-str [s]
   (->> s
        read-string
        (cl-format nil "~36,'0',B")))
 
-(defn mask [s msk]
+(defn mask-val [s msk]
   (->> s
        (map
         (fn [mbit sbit]
@@ -30,23 +31,53 @@ mem[26] = 1")
         msk)
        (apply str)))
 
-(defn eval-decimal [s msk]
+(defn eval-decimal [s mask]
   (-> s
       decimal-str->binary-str
-      (mask msk)
+      (mask-val mask)
       (->> (str "2r0")
            read-string)))
 
-(->> input
-     str/split-lines
-     (reduce
-      (fn [state line]
-        (if-let [[_ mask] (re-matches #"mask = ([01X]+)" line)]
-          (assoc state :mask mask)
-          (let [[addr val] (re-seq #"\d+" line)]
-            (update state :mem assoc addr (eval-decimal val (:mask state))))))
-      {:mem {}})
-     :mem
-     vals
-     (apply +))
+(defn solution [input mem-update-fn]
+  (->> input
+       str/split-lines
+       (reduce
+        (fn [state line]
+          (if-let [[_ mask] (re-matches #"mask = ([01X]+)" line)]
+            (assoc state :mask mask)
+            (let [[addr val] (re-seq #"\d+" line)]
+              (mem-update-fn state addr val))))
+        {:mem {}})
+       :mem
+       vals
+       (apply +)))
+
+(defn update-mem-1 [state addr val]
+  (update state :mem assoc addr (eval-decimal val (:mask state))))
+
+(solution input update-mem-1)
 ;; => 9296748256641
+
+;;; part 2
+
+(defn mask-addr [s mask]
+  (->> s
+       decimal-str->binary-str
+       (map
+        (fn [mbit sbit]
+          (case mbit
+            \0 [sbit]
+            \1 [1]
+            \X [0 1]))
+        mask)
+       (apply combo/cartesian-product)
+       (map (partial apply str))))
+
+(defn update-mem-2 [{:keys [mask] :as state} addr val]
+  (->> (mask-addr addr mask)
+       (map (fn [addr'] [addr' (read-string val)]))
+       (into {})
+       (update state :mem merge)))
+
+(time (solution input update-mem-2))
+;; => 4877695371685
